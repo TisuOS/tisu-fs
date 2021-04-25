@@ -86,6 +86,7 @@ impl FileSystem {
         Ok(Directory {
             name: node.name.clone(),
             block_idx: node.block_idx,
+            device_id : self.device_id,
             path: node.path.clone(),
             item,
         })

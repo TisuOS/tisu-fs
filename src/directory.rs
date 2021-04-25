@@ -5,6 +5,7 @@
 pub struct Directory{
     pub name : String,
     pub block_idx : usize,
+    pub device_id : usize,
     pub path : String,
     pub item : Vec<DirectoryItem>
 }
@@ -17,6 +18,7 @@ pub struct DirectoryItem {
     pub itype : DirItemType,
 }
 
+#[derive(PartialEq)]
 pub enum DirItemType {
     Directory,
     File,

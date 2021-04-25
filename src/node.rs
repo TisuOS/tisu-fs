@@ -50,22 +50,16 @@ impl Node {
     }
 
     pub fn search_node(&mut self, path : String, format : &mut dyn Format)->Result<Node, NodeError> {
-        if !path.contains("/") {
+        if path.len() == 0 {
             self.expend(format);
-            if let Some(node) = &self.node {
-                let node = node.get(&path).unwrap();
-                return Ok(Node {
-                    name : node.name.clone(),
-                    path : node.path.clone(),
-                    block_idx : node.block_idx,
-                    directory : node.directory.clone(),
-                    file : node.file.clone(),
-                    node : None,
-                });
-            }
-            else {
-                return Err(NodeError::NoDirectory(path));
-            }
+            return Ok(Node {
+                name : self.name.clone(),
+                path : self.path.clone(),
+                block_idx : self.block_idx,
+                directory : self.directory.clone(),
+                file : self.file.clone(),
+                node : None,
+            });
         }
         let (name, path) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
