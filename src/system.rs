@@ -30,9 +30,7 @@ impl FileSystem {
         format : &'static mut dyn Format,
         device_id : usize,
     )->Self {
-        let data = &mut [0;512];
-        cache_buffer.read(device_id, data, 0);
-        let info = format.parse_super_block(data);
+        let info = format.parse_super_block();
         let root = Node::new(String::from("root"), String::from("/"),
                 info.root_directory_block_idx,
             format.parse_node(info.root_directory_block_idx).unwrap());
@@ -50,7 +48,17 @@ impl FileSystem {
         }
     }
 
+    fn format_path(&self, path :&String, dir : bool)->String {
+        let rt = path.trim().to_string();
+        let mut rt = rt.trim_matches('/').to_string();
+        if rt.len() > 0 && dir{
+            rt.push('/');
+        }
+        rt
+    }
+
     pub fn open(&mut self, path : String, flag : FileFlag)->Result<&File, ()> {
+        let path = self.format_path(&path, false);
         if let Some(id) = self.path_to_id.get(&path) {
             let file = self.files.get_mut(id).unwrap();
             file.open(flag).unwrap();
@@ -65,6 +73,7 @@ impl FileSystem {
     }
 
     pub fn enter(&mut self, path : String)->Result<Directory, ()> {
+        let path = self.format_path(&path, true);
         let node = self.root.search_node(path, self.format).unwrap();
         self.generate_directory(node)
     }

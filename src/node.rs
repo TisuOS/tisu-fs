@@ -36,17 +36,17 @@ impl Node {
                 return Err(NodeError::NoDirectory(path));
             }
         }
-        let (name, path) = path.split_once("/").unwrap();
+        let (name, p) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
             if dir.name == *name {
                 self.expend(format);
                 if let Some(node) = &mut self.node {
-                    return node.get_mut(name).unwrap().search_leaf(path.to_string(), format);
+                    return node.get_mut(name).unwrap().search_leaf(p.to_string(), format);
                 }
                 return Err(NodeError::ExpendErr);
             }
         }
-        Err(NodeError::NoDirectory("s".to_string()))
+        Err(NodeError::NoDirectory("s".to_string() + &path[..] + " " + name + " " + p))
     }
 
     pub fn search_node(&mut self, path : String, format : &mut dyn Format)->Result<Node, NodeError> {
