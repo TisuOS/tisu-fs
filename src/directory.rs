@@ -18,6 +18,16 @@ pub struct DirectoryItem {
     pub itype : DirItemType,
 }
 
+impl DirectoryItem {
+    pub fn is_file(&self)->bool {
+        self.itype == DirItemType::File
+    }
+
+    pub fn is_dir(&self)->bool {
+        self.itype == DirItemType::Directory
+    }
+}
+
 #[derive(PartialEq)]
 pub enum DirItemType {
     Directory,

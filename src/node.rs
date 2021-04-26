@@ -61,17 +61,17 @@ impl Node {
                 node : None,
             });
         }
-        let (name, path) = path.split_once("/").unwrap();
+        let (name, p) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
             if dir.name == *name {
                 self.expend(format);
                 if let Some(node) = &mut self.node {
-                    return node.get_mut(name).unwrap().search_node(path.to_string(), format);
+                    return node.get_mut(name).unwrap().search_node(p.to_string(), format);
                 }
                 return Err(NodeError::ExpendErr);
             }
         }
-        Err(NodeError::NoDirectory("s".to_string()))
+        Err(NodeError::NoDirectory("s".to_string() + &path[..] + " " + name + " " + p))
     }
 
     fn expend(&mut self, format : &mut dyn Format) {
