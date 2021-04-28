@@ -1,5 +1,6 @@
 /// ## 文件
 /// 文件结构体作为文件的唯一合理存在标志
+#[derive(Debug)]
 pub struct File{
     pub id : usize,
     pub device_id : usize,
