@@ -3,7 +3,7 @@ use core::cmp::min;
 use alloc::collections::BTreeMap;
 use alloc::prelude::v1::*;
 use device_buffer::CacheBuffer;
-use crate::{DirectoryItem, FileFlag, Leaf, directory::Directory, file::{File, FileState}, file_id::IdManager, node::Node, require::Format};
+use crate::{DirectoryItem, FileFlag, Leaf, SystemOp, directory::Directory, file::{File, FileState}, file_id::IdManager, node::Node, require::Format};
 
 /// ## 文件系统抽象
 /// 将磁盘中的文件系统抽象为一个 System，各种格式都转换成此结构
@@ -57,27 +57,6 @@ impl FileSystem {
         rt
     }
 
-    pub fn open(&mut self, path : String, flag : FileFlag)->Result<&File, ()> {
-        let path = self.format_path(&path, false);
-        if let Some(id) = self.path_to_id.get(&path) {
-            let file = self.files.get_mut(id).unwrap();
-            file.open(flag).unwrap();
-            Ok(file)
-        }
-        else {
-            let leaf = self.root.search_leaf(path.clone(), self.format).unwrap();
-            let file = self.generate_file(leaf, path).unwrap();
-            file.open(flag).unwrap();
-            Ok(file)
-        }
-    }
-
-    pub fn enter(&mut self, path : String)->Result<Directory, ()> {
-        let path = self.format_path(&path, true);
-        let node = self.root.search_node(path, self.format).unwrap();
-        self.generate_directory(node)
-    }
-
     fn generate_directory(&mut self, node : Node)->Result<Directory, ()> {
         let mut item = Vec::new();
         for file in node.file.iter() {
@@ -127,8 +106,31 @@ impl FileSystem {
             Err("Isn't a file")
         }
     }
+}
 
-    pub fn get_file(&mut self, path : String)->Result<File, IoError> {
+impl SystemOp for FileSystem {
+    fn open(&mut self, path : String, flag : FileFlag)->Result<&File, ()> {
+        let path = self.format_path(&path, false);
+        if let Some(id) = self.path_to_id.get(&path) {
+            let file = self.files.get_mut(id).unwrap();
+            file.open(flag).unwrap();
+            Ok(file)
+        }
+        else {
+            let leaf = self.root.search_leaf(path.clone(), self.format).unwrap();
+            let file = self.generate_file(leaf, path).unwrap();
+            file.open(flag).unwrap();
+            Ok(file)
+        }
+    }
+
+    fn enter(&mut self, path : String)->Result<Directory, ()> {
+        let path = self.format_path(&path, true);
+        let node = self.root.search_node(path, self.format).unwrap();
+        self.generate_directory(node)
+    }
+
+    fn get_file(&mut self, path : String)->Result<File, IoError> {
         let path = self.format_path(&path, false);
         if let Some(id) = self.path_to_id.get(&path) {
             let file = self.files.get_mut(id).unwrap();
@@ -141,7 +143,7 @@ impl FileSystem {
         }
     }
 
-    pub fn read(&mut self, id : usize, data : &mut [u8])->IoResult {
+    fn read(&mut self, id : usize, data : &mut [u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
             if file.read() {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
@@ -166,7 +168,7 @@ impl FileSystem {
         else { Err(IoError::FileClosed) }
     }
 
-    pub fn write(&mut self, id : usize, data : &[u8])->IoResult {
+    fn write(&mut self, id : usize, data : &[u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
             if file.write() {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
@@ -191,25 +193,26 @@ impl FileSystem {
         else { Err(IoError::FileClosed) }
     }
 
-    pub fn refresh(&mut self, dir : &Directory) {
+    fn refresh(&mut self, dir : &Directory) {
         self.root.refresh(dir.path.clone(), self.format).unwrap();
     }
 
-    pub fn total_size(&self)->usize {
+    fn total_size(&self)->usize {
         self.total_size
     }
 
-    pub fn block_size(&self)->usize {
+    fn block_size(&self)->usize {
         self.block_size
     }
 
-    pub fn contain(&self, id : usize)->bool {
+    fn contain(&self, id : usize)->bool {
         self.files.contains_key(&id)
     }
+
 }
 
 
-type IoResult = Result<usize, IoError>;
+pub type IoResult = Result<usize, IoError>;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IoError {
