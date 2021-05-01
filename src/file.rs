@@ -1,5 +1,5 @@
 /// ## 文件
-/// 文件结构体作为文件的唯一合理存在标志
+/// 文件结构体作为文件的信息体现
 #[derive(Debug)]
 pub struct File{
     pub id : usize,
@@ -73,6 +73,15 @@ pub enum FileFlag{
 impl FileFlag{
     pub fn val(self)->usize{
         self as usize
+    }
+
+    pub fn from(n : usize)->Option<Self> {
+        match n {
+            1 => Some(Self::Read),
+            2 => Some(Self::Write),
+            3 => Some(Self::ReadWrite),
+            _ => None
+        }
     }
 }
 

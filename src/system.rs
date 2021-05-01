@@ -5,14 +5,13 @@ use alloc::prelude::v1::*;
 use device_buffer::CacheBuffer;
 use crate::{DirectoryItem, FileFlag, Leaf, directory::Directory, file::{File, FileState}, file_id::IdManager, node::Node, require::Format};
 
-
 /// ## 文件系统抽象
 /// 将磁盘中的文件系统抽象为一个 System，各种格式都转换成此结构
 /// 同时为文件的读写提供同步保证
 /// 文件操作以文件的标志为基础进行读写，使用前先获取标志
 /// 文件系统所有磁盘操作以块为基本单位
 pub struct FileSystem {
-    pub id_mgr : IdManager,
+    pub id_mgr : &'static mut IdManager,
     pub files : BTreeMap<usize, File>,
     pub path_to_id : BTreeMap<String, usize>,
     pub cache_buffer : &'static mut dyn CacheBuffer,
@@ -28,6 +27,7 @@ impl FileSystem {
     pub fn new(
         cache_buffer:&'static mut dyn CacheBuffer,
         format : &'static mut dyn Format,
+        id_mgr : &'static mut IdManager,
         device_id : usize,
     )->Self {
         let info = format.parse_super_block();
@@ -35,7 +35,7 @@ impl FileSystem {
                 info.root_directory_block_idx,
             format.parse_node(info.root_directory_block_idx).unwrap());
         Self {
-            id_mgr: IdManager::new(),
+            id_mgr,
             files: BTreeMap::new(),
             path_to_id: BTreeMap::new(),
             cache_buffer,
@@ -128,12 +128,26 @@ impl FileSystem {
         }
     }
 
+    pub fn get_file(&mut self, path : String)->Result<File, IoError> {
+        let path = self.format_path(&path, false);
+        if let Some(id) = self.path_to_id.get(&path) {
+            let file = self.files.get_mut(id).unwrap();
+            Ok(file.clone())
+        }
+        else {
+            let leaf = self.root.search_leaf(path.clone(), self.format).unwrap();
+            let file = self.generate_file(leaf, path).unwrap();
+            Ok(file.clone())
+        }
+    }
+
     pub fn read(&mut self, id : usize, data : &mut [u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
             if file.read() {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
+                let mut len = 0;
                 for (idx, addr) in block_chain.iter().enumerate() {
                     let st = idx * self.block_size;
                     if st >= data.len() {
@@ -141,10 +155,11 @@ impl FileSystem {
                     }
                     let ed = min((idx + 1) * self.block_size, data.len());
                     let data = &mut data[st..ed];
+                    len += ed - st;
                     self.cache_buffer.read(self.device_id, data,
                         self.block_start + *addr * self.block_size);
                 }
-                Ok(())
+                Ok(len)
             }
             else { Err(IoError::ReadFromWrite) }
         }
@@ -157,18 +172,19 @@ impl FileSystem {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
+                let mut len = 0;
                 for (idx, addr) in block_chain.iter().enumerate() {
                     let st = idx * self.block_size;
                     if st >= data.len() {
                         break;
                     }
                     let ed = min((idx + 1) * self.block_size, data.len());
-                    let data =
-                        &data[st..ed];
+                    let data = &data[st..ed];
+                    len += ed - st;
                     self.cache_buffer.write(self.device_id, data,
                         self.block_start + *addr * self.block_size);
                 }
-                Ok(())
+                Ok(len)
             }
             else { Err(IoError::WriteToReadOnly) }
         }
@@ -186,10 +202,14 @@ impl FileSystem {
     pub fn block_size(&self)->usize {
         self.block_size
     }
+
+    pub fn contain(&self, id : usize)->bool {
+        self.files.contains_key(&id)
+    }
 }
 
 
-type IoResult = Result<(), IoError>;
+type IoResult = Result<usize, IoError>;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum IoError {
