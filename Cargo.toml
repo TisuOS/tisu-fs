@@ -7,7 +7,11 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tisu-memory = { path = "../../github/tisu-memory" }
-tisu-sync = { path = "../../github/tisu-sync" }
-tisu-driver = { path = "../../github/tisu-driver" }
-device-buffer = { path = "../../github/device-buffer" }
+tisu-memory = { path = "../tisu-memory" }
+tisu-sync = { path = "../tisu-sync" }
+tisu-driver = { path = "../tisu-driver" }
+device-buffer = { path = "../device-buffer" }
+# tisu-memory = { git = "https://github.com/TisuOS/tisu-memory" }
+# tisu-sync = { git = "https://github.com/TisuOS/tisu-sync" }
+# tisu-driver = { git = "https://github.com/TisuOS/tisu-driver" }
+# device-buffer = { git = "https://github.com/TisuOS/device-buffer" }
