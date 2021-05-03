@@ -26,7 +26,16 @@ impl DirectoryItem {
     }
 }
 
-#[derive(PartialEq)]
+impl Clone for DirectoryItem {
+    fn clone(&self) -> Self {
+        Self {
+            name:self.name.clone(),
+            itype:self.itype,
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Copy)]
 pub enum DirItemType {
     Directory,
     File,
