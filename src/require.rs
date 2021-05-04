@@ -1,4 +1,4 @@
-use crate::{Directory, File, FileFlag, block_info::DiskInfo, leaf::Leaf, system::{FileSystem, IoError, IoResult}};
+use crate::{Directory, File, FileFlag, block_info::DiskInfo, leaf::Leaf, system::{IoError, IoResult}};
 use alloc::prelude::v1::*;
 
 pub trait Format {
