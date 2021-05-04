@@ -2,10 +2,10 @@ use crate::{Directory, File, FileFlag, block_info::DiskInfo, leaf::Leaf, system:
 use alloc::prelude::v1::*;
 
 pub trait Format {
-    fn to_system(&self)->FileSystem;
     fn parse_node(&self, block_idx : usize)->Result<Vec<Leaf>, ()>;
     fn get_block_chain(&self, start_idx : usize)->Result<Vec<usize>, ()>;
     fn parse_super_block(&self)->DiskInfo;
+    fn get_device(&self)->usize;
 }
 
 pub trait SystemOp {
@@ -30,5 +30,7 @@ pub trait SystemOp {
 
     /// 刷新对应目录下的信息
     fn refresh(&mut self, dir : &Directory);
+
+    fn check(&self)->usize;
 }
 

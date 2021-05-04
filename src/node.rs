@@ -1,4 +1,4 @@
-use alloc::{collections::BTreeMap, prelude::v1::*};
+use alloc::{collections::BTreeMap, prelude::v1::*, sync::Arc};
 
 use crate::{leaf::Leaf, require::Format};
 
@@ -24,7 +24,7 @@ impl Node {
         }
     }
 
-    pub fn search_leaf(&mut self, path : String, format : &mut dyn Format)->Result<Leaf, NodeError> {
+    pub fn search_leaf(&mut self, path : String, format : Arc<dyn Format>)->Result<Leaf, NodeError> {
         if !path.contains("/") {
             if let Some(dir) = self.directory.iter().find(|d|{d.name == path}) {
                 return Ok(dir.clone());
@@ -39,7 +39,7 @@ impl Node {
         let (name, p) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
             if dir.name == *name {
-                self.expend(format);
+                self.expend(format.clone());
                 if let Some(node) = &mut self.node {
                     return node.get_mut(name).unwrap().search_leaf(p.to_string(), format);
                 }
@@ -49,7 +49,7 @@ impl Node {
         Err(NodeError::NoDirectory("s".to_string() + &path[..] + " " + name + " " + p))
     }
 
-    pub fn search_node(&mut self, path : String, format : &mut dyn Format)->Result<Node, NodeError> {
+    pub fn search_node(&mut self, path : String, format : Arc<dyn Format>)->Result<Node, NodeError> {
         if path.len() == 0 {
             self.expend(format);
             return Ok(Node {
@@ -64,7 +64,7 @@ impl Node {
         let (name, p) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
             if dir.name == *name {
-                self.expend(format);
+                self.expend(format.clone());
                 if let Some(node) = &mut self.node {
                     return node.get_mut(name).unwrap().search_node(p.to_string(), format);
                 }
@@ -74,7 +74,7 @@ impl Node {
         Err(NodeError::NoDirectory("s".to_string() + &path[..] + " " + name + " " + p))
     }
 
-    fn expend(&mut self, format : &mut dyn Format) {
+    fn expend(&mut self, format : Arc<dyn Format>) {
         if self.node.is_none() {
             let mut nodes = BTreeMap::new();
             for dir in self.directory.iter() {
@@ -87,7 +87,7 @@ impl Node {
         }
     }
 
-    pub fn refresh(&mut self, path:String, format : &mut dyn Format)->Result<(), NodeError> {
+    pub fn refresh(&mut self, path:String, format : Arc<dyn Format>)->Result<(), NodeError> {
         if path.len() == 0 {
             self.reset(format);
             return Ok(())
@@ -95,7 +95,7 @@ impl Node {
         let (name, path) = path.split_once("/").unwrap();
         for dir in self.directory.iter_mut() {
             if dir.name == *name {
-                self.expend(format);
+                self.expend(format.clone());
                 if let Some(node) = &mut self.node {
                     return node.get_mut(name).unwrap().refresh(path.to_string(), format);
                 }
@@ -105,7 +105,7 @@ impl Node {
         Err(NodeError::NoDirectory(path.to_string()))
     }
 
-    pub fn reset(&mut self, format : &mut dyn Format) {
+    pub fn reset(&mut self, format : Arc<dyn Format>) {
         let leaves = format.parse_node(self.block_idx).unwrap();
         for leaf in leaves {
             match leaf.ltype {

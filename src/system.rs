@@ -1,6 +1,6 @@
 use core::cmp::min;
 
-use alloc::collections::BTreeMap;
+use alloc::{collections::BTreeMap, sync::Arc};
 use alloc::prelude::v1::*;
 use device_buffer::CacheBuffer;
 use crate::{DirectoryItem, FileFlag, Leaf, SystemOp, directory::Directory, file::{File, FileState}, file_id::IdManager, node::Node, require::Format};
@@ -15,7 +15,7 @@ pub struct FileSystem {
     pub files : BTreeMap<usize, File>,
     pub path_to_id : BTreeMap<String, usize>,
     pub cache_buffer : &'static mut dyn CacheBuffer,
-    pub format : &'static mut dyn Format,
+    pub format : Arc<dyn Format>,
     pub total_size : usize,
     pub block_size : usize,
     pub block_start : usize,
@@ -26,7 +26,7 @@ pub struct FileSystem {
 impl FileSystem {
     pub fn new(
         cache_buffer:&'static mut dyn CacheBuffer,
-        format : &'static mut dyn Format,
+        format : Arc<dyn Format>,
         id_mgr : &'static mut IdManager,
         device_id : usize,
     )->Self {
@@ -117,7 +117,7 @@ impl SystemOp for FileSystem {
             Ok(file)
         }
         else {
-            let leaf = self.root.search_leaf(path.clone(), self.format).unwrap();
+            let leaf = self.root.search_leaf(path.clone(), self.format.clone()).unwrap();
             let file = self.generate_file(leaf, path).unwrap();
             file.open(flag).unwrap();
             Ok(file)
@@ -126,7 +126,7 @@ impl SystemOp for FileSystem {
 
     fn enter(&mut self, path : String)->Result<Directory, ()> {
         let path = self.format_path(&path, true);
-        let node = self.root.search_node(path, self.format).unwrap();
+        let node = self.root.search_node(path, self.format.clone()).unwrap();
         self.generate_directory(node)
     }
 
@@ -137,7 +137,7 @@ impl SystemOp for FileSystem {
             Ok(file.clone())
         }
         else {
-            let leaf = self.root.search_leaf(path.clone(), self.format).unwrap();
+            let leaf = self.root.search_leaf(path.clone(), self.format.clone()).unwrap();
             let file = self.generate_file(leaf, path).unwrap();
             Ok(file.clone())
         }
@@ -146,7 +146,7 @@ impl SystemOp for FileSystem {
     fn read(&mut self, id : usize, data : &mut [u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
             if file.read() {
-                let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
+                let leaf = self.root.search_leaf(file.path.clone(), self.format.clone()).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
                 let mut len = 0;
@@ -171,7 +171,7 @@ impl SystemOp for FileSystem {
     fn write(&mut self, id : usize, data : &[u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
             if file.write() {
-                let leaf = self.root.search_leaf(file.path.clone(), self.format).unwrap();
+                let leaf = self.root.search_leaf(file.path.clone(), self.format.clone()).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
                 let mut len = 0;
@@ -194,7 +194,7 @@ impl SystemOp for FileSystem {
     }
 
     fn refresh(&mut self, dir : &Directory) {
-        self.root.refresh(dir.path.clone(), self.format).unwrap();
+        self.root.refresh(dir.path.clone(), self.format.clone()).unwrap();
     }
 
     fn total_size(&self)->usize {
@@ -209,6 +209,9 @@ impl SystemOp for FileSystem {
         self.files.contains_key(&id)
     }
 
+    fn check(&self) ->usize {
+        self.format.get_device()
+    }
 }
 
 
