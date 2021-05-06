@@ -11,7 +11,7 @@ tisu-memory = { path = "../tisu-memory" }
 tisu-sync = { path = "../tisu-sync" }
 tisu-driver = { path = "../tisu-driver" }
 device-buffer = { path = "../device-buffer" }
-# tisu-memory = { git = "https://github.com/TisuOS/tisu-memory" }
-# tisu-sync = { git = "https://github.com/TisuOS/tisu-sync" }
-# tisu-driver = { git = "https://github.com/TisuOS/tisu-driver" }
-# device-buffer = { git = "https://github.com/TisuOS/device-buffer" }
+# tisu-memory = { git = "https://github.com/TisuOS/tisu-memory", tag = "v2.0" }
+# tisu-sync = { git = "https://github.com/TisuOS/tisu-sync", tag = "v1.0" }
+# tisu-driver = { git = "https://github.com/TisuOS/tisu-driver", tag = "v2.0" }
+# device-buffer = { git = "https://github.com/TisuOS/device-buffer", tag = "v2.0" }
