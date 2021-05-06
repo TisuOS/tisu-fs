@@ -1,4 +1,4 @@
-use crate::{Directory, File, FileFlag, block_info::DiskInfo, leaf::Leaf, system::{IoError, IoResult}};
+use crate::{Directory, File, FileFlag, disk_info::DiskInfo, leaf::Leaf, system::{IoError, IoResult}};
 use alloc::prelude::v1::*;
 
 pub trait Format {
@@ -9,7 +9,11 @@ pub trait Format {
 }
 
 pub trait SystemOp {
-    fn open(&mut self, path : String, flag : FileFlag)->Result<&File, ()>;
+    fn file(&mut self, id : usize)->Option<&mut File>;
+
+    fn open(&mut self, path : String, flag : FileFlag)->Result<&mut File, ()>;
+
+    fn close(&mut self, id : usize);
 
     /// 仅取得目录信息
     fn enter(&mut self, path : String)->Result<Directory, ()>;

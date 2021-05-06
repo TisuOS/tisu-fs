@@ -19,7 +19,7 @@ mod directory;
 mod node;
 mod leaf;
 mod file_id;
-mod block_info;
+mod disk_info;
 
 pub use directory::*;
 pub use file::{File, FileFlag};
@@ -28,4 +28,4 @@ pub use require::*;
 pub use file_id::IdManager;
 pub use leaf::*;
 pub use node::*;
-pub use block_info::*;
+pub use disk_info::*;

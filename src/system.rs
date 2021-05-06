@@ -109,7 +109,11 @@ impl FileSystem {
 }
 
 impl SystemOp for FileSystem {
-    fn open(&mut self, path : String, flag : FileFlag)->Result<&File, ()> {
+    fn file(&mut self, id : usize)->Option<&mut File> {
+        self.files.get_mut(&id)
+    }
+
+    fn open(&mut self, path : String, flag : FileFlag)->Result<&mut File, ()> {
         let path = self.format_path(&path, false);
         if let Some(id) = self.path_to_id.get(&path) {
             let file = self.files.get_mut(id).unwrap();
@@ -121,6 +125,12 @@ impl SystemOp for FileSystem {
             let file = self.generate_file(leaf, path).unwrap();
             file.open(flag).unwrap();
             Ok(file)
+        }
+    }
+
+    fn close(&mut self, id : usize) {
+        if let Some(file) = self.files.get_mut(&id) {
+            file.close();
         }
     }
 
@@ -145,7 +155,7 @@ impl SystemOp for FileSystem {
 
     fn read(&mut self, id : usize, data : &mut [u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
-            if file.read() {
+            if file.readable() {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format.clone()).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
@@ -170,7 +180,7 @@ impl SystemOp for FileSystem {
 
     fn write(&mut self, id : usize, data : &[u8])->IoResult {
         if let Some(file) = self.files.get_mut(&id) {
-            if file.write() {
+            if file.writable() {
                 let leaf = self.root.search_leaf(file.path.clone(), self.format.clone()).unwrap();
                 let block_chain =
                     self.format.get_block_chain(leaf.block_idx).unwrap();
