@@ -14,4 +14,4 @@ edition = "2018"
 tisu-memory = { git = "https://github.com/TisuOS/tisu-memory", tag = "v3.0" }
 tisu-sync = { git = "https://github.com/TisuOS/tisu-sync", tag = "v2.0" }
 tisu-driver = { git = "https://github.com/TisuOS/tisu-driver", tag = "v3.0" }
-device-buffer = { git = "https://github.com/TisuOS/device-buffer", tag = "v3.0" }
+device-buffer = { git = "https://github.com/TisuOS/device-buffer", tag = "v4.0" }
