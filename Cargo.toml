@@ -1,17 +1,13 @@
 [package]
 name = "tisu-fs"
-version = "0.1.0"
+version = "0.4.1"
 authors = ["1363558876@qq.com <1363558876@qq.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# tisu-memory = { path = "../tisu-memory" }
-# tisu-sync = { path = "../tisu-sync" }
-# tisu-driver = { path = "../tisu-driver" }
-# device-buffer = { path = "../device-buffer" }
-tisu-memory = { git = "https://github.com/TisuOS/tisu-memory", tag = "v3.0" }
-tisu-sync = { git = "https://github.com/TisuOS/tisu-sync", tag = "v2.0" }
-tisu-driver = { git = "https://github.com/TisuOS/tisu-driver", tag = "v3.0" }
-device-buffer = { git = "https://github.com/TisuOS/device-buffer", tag = "v4.0" }
+tisu-memory = { git = "https://gitee.com/TisuOS/tisu-memory", tag = "v3.1" }
+tisu-sync = { git = "https://gitee.com/TisuOS/tisu-sync", tag = "v3.0" }
+tisu-driver = { git = "https://gitee.com/TisuOS/tisu-driver", tag = "v3.1" }
+device-buffer = { git = "https://gitee.com/TisuOS/device-buffer", tag = "v4.1" }
